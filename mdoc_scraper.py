@@ -10,9 +10,8 @@ from airtable import Airtable
 from documentcloud import DocumentCloud
 from bs4 import BeautifulSoup
 from twython import Twython
-from tabulate import tabulate
 
-table = [['scraper', 'seconds', 'new', 'total']]
+table = ['scraper\tseconds\tnew\ttotal']
 tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
              os.environ['TWITTER_OAUTH_TOKEN'], os.environ['TWITTER_OAUTH_TOKEN_SECRET'])
 dc = DocumentCloud(
@@ -25,7 +24,7 @@ airtab = Airtable(os.environ['other_scrapers_db'],
                   'mdoc', os.environ['AIRTABLE_API_KEY'])
 
 
-def scrape_daily_pop(quiet=True):
+def scrape_daily_pop():
     """This function does blah blah."""
     t0 = time.time()
     url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Daily-Inmate-Population.aspx'
@@ -47,11 +46,10 @@ def scrape_daily_pop(quiet=True):
             print(tweet_txt)
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    if not quiet:
-        table.append(['mdoc daily pop', round(time.time() - t0, 2), i, len(rows)])
+    table.append(f"mdoc daily pop\t{round(time.time() - t0, 2)}\t{i}\t{len(rows)}")
 
 
-def scrape_monthly_fact_scheets(quiet=True):
+def scrape_monthly_fact_scheets():
     """This function does blah blah."""
     t0 = time.time()
     url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Monthly-Facts.aspx'
@@ -72,11 +70,10 @@ def scrape_monthly_fact_scheets(quiet=True):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    if not quiet:
-        table.append(['mdoc fact sheet', round(time.time() - t0, 2), i, len(rows)])
+    table.append(f"mdoc fact sheet\t{round(time.time() - t0, 2)}\t{i}\t{len(rows)}")
 
 
-def scrape_press_releases(quiet=True):
+def scrape_press_releases():
     """This function does blah blah."""
     t0 = time.time()
     url = 'https://www.mdoc.ms.gov/News/Pages/Press-Releases.aspx'
@@ -98,8 +95,7 @@ def scrape_press_releases(quiet=True):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    if not quiet:
-        table.append(['mdoc press releases', round(time.time() - t0, 2), i, len(rows)])
+    table.append(f"mdoc press releases\t{round(time.time() - t0, 2)}\t{i}\t{len(rows)}")
 
 
 def save_to_folder(this_dict):
@@ -144,10 +140,14 @@ def tweet_it(obj, tweet_txt):
 
 
 def main():
-    scrape_press_releases(quiet=False)
-    scrape_monthly_fact_scheets(quiet=False)
-    scrape_daily_pop(quiet=False)
-    print(tabulate(table, headers="firstrow", tablefmt="fancy_grid"))
+    data = {'value1': 'mdoc_scraper.py'}
+    scrape_press_releases()
+    scrape_monthly_fact_scheets()
+    scrape_daily_pop()
+    data['value2'] = '\n'.join(table)
+    data['value3'] = 'success'
+    ifttt_event_url = os.environ['IFTTT_WEBHOOKS_URL'].format('code_completed')
+    requests.post(ifttt_event_url, json=data)
 
 
 if __name__ == "__main__":
