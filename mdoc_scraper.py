@@ -45,8 +45,8 @@ def scrape_daily_pop(ifttt_payload):
             print(tweet_txt)
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['value1'] += i
-    ifttt_payload['value2'] += len(rows)
+    ifttt_payload['Value1'] += i
+    ifttt_payload['Value2'] += len(rows)
 
 
 def scrape_monthly_fact_scheets(ifttt_payload):
@@ -69,8 +69,8 @@ def scrape_monthly_fact_scheets(ifttt_payload):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['value1'] += i
-    ifttt_payload['value2'] += len(rows)
+    ifttt_payload['Value1'] += i
+    ifttt_payload['Value2'] += len(rows)
 
 
 def scrape_press_releases(ifttt_payload):
@@ -94,8 +94,8 @@ def scrape_press_releases(ifttt_payload):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['value1'] += i
-    ifttt_payload['value2'] += len(rows)
+    ifttt_payload['Value1'] += i
+    ifttt_payload['Value2'] += len(rows)
 
 
 def save_to_folder(this_dict):
@@ -141,11 +141,11 @@ def tweet_it(obj, tweet_txt):
 
 def main():
     t0 = time.time()
-    ifttt_payload = {'value1': 0, 'value2': 0}
+    ifttt_payload = {'Value1': 0, 'Value2': 0}
     scrape_press_releases(ifttt_payload)
     scrape_monthly_fact_scheets(ifttt_payload)
     scrape_daily_pop(ifttt_payload)
-    ifttt_payload['value3'] = round(time.time() - t0, 2)
+    ifttt_payload['Value3'] = round(time.time() - t0, 2)
     ifttt_event_url = os.environ['IFTTT_WEBHOOKS_URL'].format('mdoc_scraper')
     requests.post(ifttt_event_url, json=ifttt_payload)
 
