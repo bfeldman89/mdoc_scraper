@@ -32,13 +32,13 @@ def scrape_daily_pop(ifttt_payload):
     rows = soup.find_all("td", class_="ms-vb")
     i = 0
     for row in rows[0:12]:
-        this_dict = {'type': 'dp'}
+        this_dict = {'type': 'daily_pop'}
         this_dict['url'] = urljoin(url, quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'], view='dp')
         if not m:
             i += 1
-            dc_data = {'type': 'dp'}
+            dc_data = {'type': 'daily_pop'}
             obj = upload_to_documentcloud(this_dict['url'], this_dict, dc_data)
             new_record = airtab.insert(this_dict, typecast=True)
             tweet_txt = new_record['fields']['draft tweet']
