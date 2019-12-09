@@ -22,15 +22,26 @@ muh_headers = {
 
 airtab = Airtable(os.environ['other_scrapers_db'],
                   'mdoc', os.environ['AIRTABLE_API_KEY'])
+airtab_log = Airtable(os.environ['log_db'],
+                      'log', os.environ['AIRTABLE_API_KEY'])
 
 
-def scrape_daily_pop(ifttt_payload):
+def wrap_it_up(function, t0, new, total):
+    this_dict = {'module': 'mdoc_scraper.py'}
+    this_dict['function'] = function
+    this_dict['duration'] = round((time.time() - t0) / 60, 2)
+    this_dict['total'] = total
+    this_dict['new'] = new
+    airtab_log.insert(this_dict, typecast=True)
+
+
+def scrape_daily_pop():
     """This function does blah blah."""
+    t0, i = time.time(), 0
     url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Daily-Inmate-Population.aspx'
     r = requests.get(url, headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
-    i = 0
     for row in rows[0:12]:
         this_dict = {'type': 'daily_pop'}
         this_dict['url'] = urljoin(url, quote(row.a.get('href')))
@@ -45,18 +56,17 @@ def scrape_daily_pop(ifttt_payload):
             print(tweet_txt)
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['Value1'] += i
-    ifttt_payload['Value2'] += len(rows)
+    wrap_it_up('scrape_daily_pop', t0, i, 12)
 
 
-def scrape_monthly_fact_scheets(ifttt_payload):
+def scrape_monthly_fact_scheets():
     """This function does blah blah."""
+    t0, i = time.time(), 0
     url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Monthly-Facts.aspx'
     r = requests.get(url, headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
-    i = 0
-    for row in rows[0:10]:
+    for row in rows[0:12]:
         this_dict = {'type': 'mfs'}
         this_dict['url'] = urljoin(url, quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
@@ -69,18 +79,17 @@ def scrape_monthly_fact_scheets(ifttt_payload):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['Value1'] += i
-    ifttt_payload['Value2'] += len(rows)
+    wrap_it_up('scrape_monthly_fact_scheets', t0, i, 12)
 
 
-def scrape_press_releases(ifttt_payload):
+def scrape_press_releases():
     """This function does blah blah."""
+    t0, i = time.time(), 0
     url = 'https://www.mdoc.ms.gov/News/Pages/Press-Releases.aspx'
     r = requests.get(url, headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
-    i = 0
-    for row in rows[0:10]:
+    for row in rows[0:12]:
         this_dict = {'type': 'pr'}
         this_dict['url'] = urljoin(url, quote(row.get('href')))
         this_dict['raw_title'] = row.string
@@ -94,8 +103,7 @@ def scrape_press_releases(ifttt_payload):
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    ifttt_payload['Value1'] += i
-    ifttt_payload['Value2'] += len(rows)
+    wrap_it_up('scrape_press_releases', t0, i, 12)
 
 
 def save_to_folder(this_dict):
@@ -140,14 +148,9 @@ def tweet_it(obj, tweet_txt):
 
 
 def main():
-    t0 = time.time()
-    ifttt_payload = {'Value1': 0, 'Value2': 0}
-    scrape_press_releases(ifttt_payload)
-    scrape_monthly_fact_scheets(ifttt_payload)
-    scrape_daily_pop(ifttt_payload)
-    ifttt_payload['Value3'] = round(time.time() - t0, 2)
-    ifttt_event_url = os.environ['IFTTT_WEBHOOKS_URL'].format('mdoc_scraper')
-    requests.post(ifttt_event_url, json=ifttt_payload)
+    scrape_press_releases()
+    scrape_monthly_fact_scheets()
+    scrape_daily_pop()
 
 
 if __name__ == "__main__":
