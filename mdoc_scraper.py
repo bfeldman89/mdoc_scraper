@@ -11,19 +11,20 @@ from documentcloud import DocumentCloud
 from bs4 import BeautifulSoup
 from twython import Twython
 
+airtab = Airtable(os.environ['other_scrapers_db'], 'mdoc', os.environ['AIRTABLE_API_KEY'])
+airtab_log = Airtable(os.environ['log_db'], 'log', os.environ['AIRTABLE_API_KEY'])
+dc = DocumentCloud(os.environ['DOCUMENT_CLOUD_USERNAME'], os.environ['DOCUMENT_CLOUD_PW'])
 tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
              os.environ['TWITTER_OAUTH_TOKEN'], os.environ['TWITTER_OAUTH_TOKEN_SECRET'])
-dc = DocumentCloud(
-    os.environ['DOCUMENT_CLOUD_USERNAME'], os.environ['DOCUMENT_CLOUD_PW'])
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-muh_headers = {
-    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
-}
 
-airtab = Airtable(os.environ['other_scrapers_db'],
-                  'mdoc', os.environ['AIRTABLE_API_KEY'])
-airtab_log = Airtable(os.environ['log_db'],
-                      'log', os.environ['AIRTABLE_API_KEY'])
+muh_headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
+urls = [
+    'https://www.mdoc.ms.gov/Admin-Finance/Pages/Daily-Inmate-Population.aspx',
+    'https://www.mdoc.ms.gov/Admin-Finance/Pages/Monthly-Facts.aspx',
+    'https://www.mdoc.ms.gov/News/Pages/Press-Releases.aspx'
+]
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def wrap_it_up(function, t0, new, total):
@@ -38,13 +39,12 @@ def wrap_it_up(function, t0, new, total):
 def scrape_daily_pop():
     """This function does blah blah."""
     t0, i = time.time(), 0
-    url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Daily-Inmate-Population.aspx'
-    r = requests.get(url, headers=muh_headers)
+    r = requests.get(urls[0], headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
     for row in rows[0:12]:
         this_dict = {'type': 'daily_pop'}
-        this_dict['url'] = urljoin(url, quote(row.a.get('href')))
+        this_dict['url'] = urljoin(urls[0], quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'], view='dp')
         if not m:
@@ -62,13 +62,12 @@ def scrape_daily_pop():
 def scrape_monthly_fact_scheets():
     """This function does blah blah."""
     t0, i = time.time(), 0
-    url = 'https://www.mdoc.ms.gov/Admin-Finance/Pages/Monthly-Facts.aspx'
-    r = requests.get(url, headers=muh_headers)
+    r = requests.get(urls[1], headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
     for row in rows[0:12]:
         this_dict = {'type': 'mfs'}
-        this_dict['url'] = urljoin(url, quote(row.a.get('href')))
+        this_dict['url'] = urljoin(urls[1], quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'], view='mfs')
         if not m:
@@ -85,13 +84,12 @@ def scrape_monthly_fact_scheets():
 def scrape_press_releases():
     """This function does blah blah."""
     t0, i = time.time(), 0
-    url = 'https://www.mdoc.ms.gov/News/Pages/Press-Releases.aspx'
-    r = requests.get(url, headers=muh_headers)
+    r = requests.get(urls[2], headers=muh_headers)
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
     for row in rows[0:12]:
         this_dict = {'type': 'pr'}
-        this_dict['url'] = urljoin(url, quote(row.get('href')))
+        this_dict['url'] = urljoin(urls[2], quote(row.get('href')))
         this_dict['raw_title'] = row.string
         this_dict['date'] = row.parent.next_sibling.string
         m = airtab.match('url', this_dict['url'], view='pr')
