@@ -5,7 +5,7 @@ from io import BytesIO
 from urllib.parse import urljoin, quote
 import requests
 from bs4 import BeautifulSoup
-from ..jail_scrapers.common import airtab_mdoc as airtab, dc, tw, muh_headers, wrap_from_module
+from common import airtab_mdoc as airtab, dc, tw, muh_headers, wrap_from_module
 
 # import urllib3
 # urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -33,7 +33,7 @@ def scrape_daily_pop():
             print(tweet_txt)
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    wrap_it_up('scrape_daily_pop', t0, i, 12)
+    wrap_it_up(t0, new=i, total=12, function='scrape_daily_pop')
 
 
 def scrape_monthly_fact_scheets():
@@ -55,7 +55,7 @@ def scrape_monthly_fact_scheets():
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    wrap_it_up('scrape_monthly_fact_scheets', t0, i, 12)
+    wrap_it_up(t0, new=i, total=12, function='scrape_monthly_fact_scheets')
 
 
 def scrape_press_releases():
@@ -78,7 +78,7 @@ def scrape_press_releases():
             tweet_txt = new_record['fields']['draft tweet']
             this_dict['tweet_id'] = tweet_it(obj, tweet_txt)
             airtab.update(new_record['id'], this_dict, typecast=True)
-    wrap_it_up('scrape_press_releases', t0, i, 12)
+    wrap_it_up(t0, new=i, total=12, function='scrape_press_releases')
 
 
 def save_to_folder(this_dict):
