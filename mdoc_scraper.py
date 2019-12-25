@@ -30,7 +30,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 def wrap_it_up(function, t0, new, total):
     this_dict = {'module': 'mdoc_scraper.py'}
     this_dict['function'] = function
-    this_dict['duration'] = round((time.time() - t0) / 60, 2)
+    this_dict['duration'] = round(time.time() - t0, 2)
     this_dict['total'] = total
     this_dict['new'] = new
     airtab_log.insert(this_dict, typecast=True)
