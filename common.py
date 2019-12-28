@@ -3,7 +3,6 @@
 import os
 import time
 from airtable import Airtable
-import cloudinary
 from documentcloud import DocumentCloud
 from twython import Twython
 
@@ -19,11 +18,6 @@ airtab_mdoc = Airtable(base_key=os.environ['other_scrapers_db'],
 airtab_tweets = Airtable(base_key=os.environ['botfeldman89_db'],
                          table_name='scheduled_tweets',
                          api_key=os.environ['AIRTABLE_API_KEY'])
-
-
-cloudinary.config(cloud_name='bfeldman89',
-                  api_key=os.environ['CLOUDINARY_API_KEY'],
-                  api_secret=os.environ['CLOUDINARY_API_SECRET'])
 
 
 dc = DocumentCloud(username=os.environ['DOCUMENT_CLOUD_USERNAME'],
