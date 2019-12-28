@@ -53,11 +53,16 @@ tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
 muh_headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
 
 
+my_funcs = {'scrape_daily_pop': 'receET4GbZsIHZ1ap',
+            'scrape_monthly_fact_scheets': 'recl93NdV0nvxiP6B',
+            'scrape_press_releases': 'rec6iaRXOshuZ3OwY'}
+
 def wrap_from_module(module):
     def wrap_it_up(t0, new=None, total=None, function=None):
         this_dict = {
             'module': module,
             'function': function,
+            '_function': my_funcs[function],
             'duration': round(time.time() - t0, 2),
             'total': total,
             'new': new
