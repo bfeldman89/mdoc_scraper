@@ -33,7 +33,8 @@ muh_headers = {'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) Ap
 
 my_funcs = {'scrape_daily_pop': 'receET4GbZsIHZ1ap',
             'scrape_monthly_fact_scheets': 'recl93NdV0nvxiP6B',
-            'scrape_press_releases': 'rec6iaRXOshuZ3OwY'}
+            'scrape_press_releases': 'rec6iaRXOshuZ3OwY',
+            'scrape_mdoc_stuff': 'recdI7ExzeoiTYI6A'}
 
 def wrap_from_module(module):
     def wrap_it_up(t0, new=None, total=None, function=None):
