@@ -20,13 +20,13 @@ def scrape_daily_pop():
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
     for row in rows[0:12]:
-        this_dict = {'type': 'daily_pop'}
+        this_dict = {'doc_type': 'daily_pop'}
         this_dict['url'] = urljoin(url, quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'], view='dp')
         if not m:
             i += 1
-            dc_data = {'type': 'daily_pop'}
+            dc_data = {'doc_type': 'daily_pop'}
             obj = upload_to_documentcloud(this_dict['url'], this_dict, dc_data)
             new_record = airtab.insert(this_dict, typecast=True)
             tweet_txt = new_record['fields']['draft tweet']
@@ -43,13 +43,13 @@ def scrape_monthly_fact_scheets():
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.find_all("td", class_="ms-vb")
     for row in rows[0:12]:
-        this_dict = {'type': 'mfs'}
+        this_dict = {'doc_type': 'mfs'}
         this_dict['url'] = urljoin(url, quote(row.a.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'], view='mfs')
         if not m:
             i += 1
-            dc_data = {'type': 'mfs'}
+            dc_data = {'doc_type': 'mfs'}
             obj = upload_to_documentcloud(this_dict['url'], this_dict, dc_data)
             new_record = airtab.insert(this_dict, typecast=True)
             tweet_txt = new_record['fields']['draft tweet']
@@ -65,14 +65,14 @@ def scrape_press_releases():
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
     for row in rows[0:12]:
-        this_dict = {'type': 'pr'}
+        this_dict = {'doc_type': 'pr'}
         this_dict['url'] = urljoin(url, quote(row.get('href')))
         this_dict['raw_title'] = row.string
         this_dict['date'] = row.parent.next_sibling.string
         m = airtab.match('url', this_dict['url'], view='pr')
         if not m:
             i += 1
-            dc_data = {'type': 'pr'}
+            dc_data = {'doc_type': 'pr'}
             obj = upload_to_documentcloud(this_dict['url'], this_dict, dc_data)
             new_record = airtab.insert(this_dict, typecast=True)
             tweet_txt = new_record['fields']['draft tweet']
