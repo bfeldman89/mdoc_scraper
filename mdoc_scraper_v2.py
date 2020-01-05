@@ -45,13 +45,13 @@ def scrape_mdoc_stuff(url, doc_type):
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
     for row in rows[0:12]:
-        this_dict = {'type': doc_type}
+        this_dict = {'doc_type': doc_type}
         this_dict['url'] = urljoin(url, quote(row.get('href')))
         this_dict['raw_title'] = row.string
         m = airtab.match('url', this_dict['url'])
         if not m:
             i += 1
-            dc_data = {'type': doc_type}
+            dc_data = {'doc_type': doc_type}
             obj = upload_to_documentcloud(this_dict['url'], this_dict, dc_data)
             new_record = airtab.insert(this_dict, typecast=True)
             tweet_txt = new_record['fields']['draft tweet']
