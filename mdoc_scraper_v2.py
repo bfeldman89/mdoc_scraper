@@ -41,7 +41,12 @@ def tweet_it(obj, tweet_txt):
 
 def scrape_mdoc_stuff(url, doc_type):
     t0, i = time.time(), 0
-    r = requests.get(url, headers=muh_headers)
+    try:
+        r = requests.get(url, headers=muh_headers)
+    except requests.ConnectionError as err:
+        print(f"Skipping {url}: {err}")
+        time.spleep(5)
+        return False
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
     for row in rows[0:12]:
