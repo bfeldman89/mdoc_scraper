@@ -1,0 +1,5 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.pythonPath": "/Users/blakefeldman/.local/share/virtualenvs/mdoc_scraper-3_ONJaHC/bin/python"
+}

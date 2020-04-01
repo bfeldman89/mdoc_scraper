@@ -4,9 +4,14 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+pylint = "*"
 
 [packages]
 requests = "*"
+beautifulsoup4 = "*"
+airtable-python-wrapper = "*"
+python-documentcloud = "*"
+twython = "*"
 
 [requires]
 python_version = "3.6"
