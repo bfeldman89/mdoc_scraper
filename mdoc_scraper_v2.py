@@ -1,4 +1,4 @@
-# !/usr/bin/env python3
+# !/usr/bin/env python
 """This module does blah blah."""
 import time
 from io import BytesIO
