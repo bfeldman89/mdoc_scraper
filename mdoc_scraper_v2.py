@@ -45,7 +45,7 @@ def scrape_mdoc_stuff(url, doc_type):
         r = requests.get(url, headers=muh_headers)
     except requests.ConnectionError as err:
         print(f"Skipping {url}: {err}")
-        time.spleep(5)
+        time.sleep(5)
         return False
     soup = BeautifulSoup(r.text, 'html.parser')
     rows = soup.select("td.ms-vb > a[href]")
