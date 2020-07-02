@@ -20,8 +20,11 @@ airtab_tweets = Airtable(base_key=os.environ['botfeldman89_db'],
                          api_key=os.environ['AIRTABLE_API_KEY'])
 
 
-dc = DocumentCloud(username=os.environ['DOCUMENT_CLOUD_USERNAME'],
-                   password=os.environ['DOCUMENT_CLOUD_PW'])
+# dc = DocumentCloud(username=os.environ['DOCUMENT_CLOUD_USERNAME'],
+#                    password=os.environ['DOCUMENT_CLOUD_PW'])
+
+dc = DocumentCloud(username=os.environ['MUCKROCK_USERNAME'],
+                   password=os.environ['MUCKROCK_PW'])
 
 
 tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
