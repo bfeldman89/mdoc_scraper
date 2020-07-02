@@ -12,6 +12,7 @@ beautifulsoup4 = "*"
 airtable-python-wrapper = "*"
 python-documentcloud = "*"
 twython = "*"
+documentcloud = "*"
 
 [requires]
 python_version = "3.8"
