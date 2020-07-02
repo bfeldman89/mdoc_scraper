@@ -18,7 +18,7 @@ def upload_to_documentcloud(pdf, this_dict, data):
     while obj.access != 'public':
         time.sleep(5)
         obj = dc.documents.get(obj.id)
-    this_dict['dc_id'] = obj.id
+    this_dict['dc_id'] = str(obj.id)
     this_dict['dc_title'] = obj.title
     this_dict['dc_access'] = obj.access
     this_dict['dc_pages'] = obj.pages
