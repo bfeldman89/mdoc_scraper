@@ -5,6 +5,7 @@ from io import BytesIO
 from urllib.parse import urljoin, quote
 import requests
 from bs4 import BeautifulSoup
+from documentcloud import exceptions
 from common import airtab_mdoc as airtab, dc, tw, muh_headers, wrap_from_module
 
 wrap_it_up = wrap_from_module('mdoc_scraper.py')
@@ -12,12 +13,20 @@ wrap_it_up = wrap_from_module('mdoc_scraper.py')
 
 def upload_to_documentcloud(pdf, this_dict, data):
     """upload to documnentcloud"""
-    obj = dc.documents.upload(
-        pdf, title=this_dict['raw_title'], source='MDOC', access='public', data=data)
-    obj = dc.documents.get(obj.id)
-    while obj.access != 'public':
-        time.sleep(5)
-        obj = dc.documents.get(obj.id)
+    obj = dc.documents.upload(pdf)
+    while obj.access not in {"public", "success"}:
+        print(obj.access)
+        try:
+            obj.access = "public"
+            obj.put()
+        except exceptions.APIError as err:
+            print(err)
+            time.sleep(5)
+            obj = dc.documents.get(obj.id)
+    obj.title = this_dict['raw_title']
+    obj.source = 'MDOC'
+    obj.data = data
+    obj.put()
     this_dict['dc_id'] = str(obj.id)
     this_dict['dc_title'] = obj.title
     this_dict['dc_access'] = obj.access
