@@ -5,15 +5,11 @@ import time
 import requests
 import send2trash
 
-from airtable import Airtable
 from pdf2image import convert_from_bytes
 from PyPDF2 import PdfFileReader
-from twython import Twython
+from common import airtab_covid as airtab, tw
 
-airtab = Airtable('appCAPZgfAobrlVeI', 'mdoc_covid', os.environ['AIRTABLE_API_KEY'])
 
-tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
-             os.environ['TWITTER_OAUTH_TOKEN'], os.environ['TWITTER_OAUTH_TOKEN_SECRET'])
 url = 'https://www.mdoc.ms.gov/Documents/Inmates%20cases%20chart%20July%2010.pdf'
 
 
