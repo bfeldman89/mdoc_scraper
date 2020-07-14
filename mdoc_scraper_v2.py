@@ -5,32 +5,21 @@ from io import BytesIO
 from urllib.parse import urljoin, quote
 import requests
 from bs4 import BeautifulSoup
-from documentcloud import exceptions
 from common import airtab_mdoc as airtab, dc, tw, muh_headers, wrap_from_module
 
 wrap_it_up = wrap_from_module('mdoc_scraper.py')
 
 
 def upload_to_documentcloud(pdf, this_dict, data):
-    """upload to documnentcloud"""
     obj = dc.documents.upload(pdf)
     while obj.status != "success":
         time.sleep(5)
         obj = dc.documents.get(obj.id)
-    # while obj.access != "public":
-    #     time.sleep(5)
-    #     try:
-    #         obj.access = "public"
-    #         obj.data = data
-    #         obj.put()
-    #     except exceptions.APIError as err:
-    #         print(err)
-    #     obj = dc.documents.get(obj.id)
     obj.access = "public"
     obj.data = data
-    obj.put()
     obj.title = this_dict['raw_title']
     obj.source = 'MDOC'
+    obj.put()
     this_dict['dc_id'] = str(obj.id)
     this_dict['dc_title'] = obj.title
     this_dict['dc_access'] = obj.access
@@ -39,7 +28,6 @@ def upload_to_documentcloud(pdf, this_dict, data):
 
 
 def tweet_it(obj, tweet_txt):
-    """tweet it"""
     media_ids = []
     image_list = obj.normal_image_url_list[:4]
     for image in image_list:
