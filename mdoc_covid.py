@@ -1,77 +1,73 @@
-#!/usr/bin/env python
-import io
-import os
+# !/usr/bin/env python
+"""This module does blah blah."""
 import time
-
+import unicodedata
+from io import BytesIO
+from urllib.parse import urljoin
 import requests
-import send2trash
-from pdf2image import convert_from_bytes
-from PyPDF2 import PdfFileReader
-
-from common import airtab_covid as airtab
-from common import tw
-
-url = 'https://www.mdoc.ms.gov/Documents/Inmates%20cases%20chart%20July%2014.pdf'
+from bs4 import BeautifulSoup
+from common import airtab_mdoc as airtab, dc, tw, muh_headers
 
 
-def extract_information():
-    response = requests.get(url)
-    if response.status_code != 200:
-        print(f'The url is broken. status code: {response.status_code}')
-        return False
-    this_dict = {}
-    with io.BytesIO(response.content) as f:
-        this_pdf = PdfFileReader(f)
-        this_dict['number_of_pages'] = this_pdf.getNumPages()
-        information = dict(this_pdf.getDocumentInfo())
-        this_dict['p1_txt'] = this_pdf.getPage(0).extractText()
-    this_dict['author'] = information.get('/Author')
-    this_dict['creator'] = information.get('/Creator')
-    this_dict['modification_datetime'] = information.get('/ModDate').replace("'", '')
-    this_dict['creation_datetime'] = information.get('/CreationDate').replace("'", '')
-    this_dict['producer'] = information.get('/Producer')
-
-    s_date = this_dict['p1_txt'].find('Last Update:') + 12
-    if s_date != 11:
-        this_dict['raw_datetime'] = this_dict['p1_txt'][s_date:].strip().replace('\n', ' ')
-        s_total = this_dict['p1_txt'].find('TOTAL') + 5
-        this_dict['total_cases'] = this_dict['p1_txt'][s_total:s_date-12].strip()
-    # this_dict['pdf'] = [{"url": url}]
-    matching_record = airtab.match('modification_datetime', this_dict['modification_datetime'])
-    if matching_record:
-        print("mdoc covid pdf hasn't been updated")
-        return False
-    new_record = airtab.insert(this_dict, typecast=True)
-    return new_record['id']
+def tweet_it(obj, tweet_txt):
+    media_ids = []
+    image_list = obj.normal_image_url_list[:4]
+    for image in image_list:
+        r = requests.get(image)
+        r.raise_for_status()
+        uploadable = BytesIO(r.content)
+        response = tw.upload_media(media=uploadable)
+        media_ids.append(response['media_id'])
+        tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
+    return tweet['id_str']
 
 
-def get_images():
-    the_media_ids = []
-    os.chdir(f"/{os.getenv('HOME')}/code/mdoc_scraper/output")
-    response = requests.get(url)
-    pages = convert_from_bytes(response.content)
-    for idx, page in enumerate(pages):
-        this_fn = f'page_{idx + 1}.jpg'
-        page.save(this_fn, 'JPEG')
-        time.sleep(2)
-        photo = open(this_fn, 'rb')
-        response = tw.upload_media(media=photo)
-        the_media_ids.append(response['media_id'])
-    return the_media_ids
+def web_to_dc(this_dict):
+    obj = dc.documents.upload(this_dict['url'])
+    while obj.status != "success":
+        time.sleep(7.5)
+        obj = dc.documents.get(obj.id)
+    obj.access = "public"
+    obj.data = {'doc_type': 'covid_update'}
+    obj.title = this_dict['raw_title']
+    obj.source = 'MDOC'
+    obj.put()
+    this_dict['dc_id'] = str(obj.id)
+    this_dict['dc_title'] = obj.title
+    this_dict['dc_access'] = obj.access
+    this_dict['dc_pages'] = obj.pages
+    this_dict['dc_p1_txt'] = unicodedata.normalize("NFKD", obj.get_page_text(1))
+    this_dict['dc_full_text'] = unicodedata.normalize("NFKD", obj.full_text)
+    this_dict['dc_pdf'] = obj.pdf_url
+    this_dict['dc_txt_url'] = obj.full_text_url
+    full_txt_lines = this_dict['dc_full_text'].splitlines()
+    if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
+        last_updated = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip()
+        total_cases = full_txt_lines[-2].replace('TOTAL', '').strip()
+        this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {last_updated}. The total number of *confirmed* cases is {total_cases}. ({this_dict['url']})"
+        this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
+        airtab.insert(this_dict, typecast=True)
 
 
-def tweet_with_images(rid, mids):
-    record = airtab.get(rid)
-    tw.update_status(status=record['fields']['msg'], media_ids=mids)
-    os.chdir(f"/{os.getenv('HOME')}/code/mdoc_scraper/output")
-    for fn in os.listdir('.'):
-        send2trash.send2trash(fn)
+def main():
+    url = 'https://www.mdoc.ms.gov/Pages/COVID-19-Information-and-Updates.aspx'
+    r = requests.get(url, headers=muh_headers)
+    soup = BeautifulSoup(r.text, 'html.parser')
+    for link in soup.find_all('a'):
+        this_dict = {'doc_type': 'covid_update'}
+        relative_url = link.get('href')
+        try:
+            if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
+                this_dict['url'] = urljoin(url, relative_url)
+                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace('\xa0', '').replace('CasesState', 'Cases: State')
+                m = airtab.match('url', this_dict['url'])
+                if not m:
+                    r = requests.get(this_dict['url'])
+                    if r.status_code == 200:
+                        web_to_dc(this_dict)
+        except AttributeError:
+            pass
 
 
-if __name__ == '__main__':
-    new_rid = extract_information()
-    if new_rid:
-        media_ids = get_images()
-        tweet_with_images(rid=new_rid, mids=media_ids)
-    else:
-        print('no updates to mdoc covid pdf')
+if __name__ == "__main__":
+    main()
