@@ -2,19 +2,23 @@
 import io
 import os
 import time
+
 import requests
 import send2trash
-
 from pdf2image import convert_from_bytes
 from PyPDF2 import PdfFileReader
-from common import airtab_covid as airtab, tw
 
+from common import airtab_covid as airtab
+from common import tw
 
-url = 'https://www.mdoc.ms.gov/Documents/Inmates%20cases%20chart%20July%2010.pdf'
+url = 'https://www.mdoc.ms.gov/Documents/Inmates%20cases%20chart%20July%2014.pdf'
 
 
 def extract_information():
     response = requests.get(url)
+    if response.status_code != 200:
+        print(f'The url is broken. status code: {response.status_code}')
+        return False
     this_dict = {}
     with io.BytesIO(response.content) as f:
         this_pdf = PdfFileReader(f)
@@ -23,22 +27,22 @@ def extract_information():
         this_dict['p1_txt'] = this_pdf.getPage(0).extractText()
     this_dict['author'] = information.get('/Author')
     this_dict['creator'] = information.get('/Creator')
-    this_dict['modification_datetime'] = information.get('/ModDate')
-    this_dict['creation_datetime'] = information.get('/CreationDate')
+    this_dict['modification_datetime'] = information.get('/ModDate').replace("'", '')
+    this_dict['creation_datetime'] = information.get('/CreationDate').replace("'", '')
     this_dict['producer'] = information.get('/Producer')
 
     s_date = this_dict['p1_txt'].find('Last Update:') + 12
-    this_dict['raw_datetime'] = this_dict['p1_txt'][s_date:].strip().replace('\n', ' ')
-    s_total = this_dict['p1_txt'].find('TOTAL') + 5
-    this_dict['total_cases'] = this_dict['p1_txt'][s_total:s_date-12].strip()
-
-    this_dict['pdf'] = [{"url": url}]
-    matching_record = airtab.match('raw_datetime', this_dict['raw_datetime'])
-    new_record = airtab.insert(this_dict, typecast=True)
+    if s_date != 11:
+        this_dict['raw_datetime'] = this_dict['p1_txt'][s_date:].strip().replace('\n', ' ')
+        s_total = this_dict['p1_txt'].find('TOTAL') + 5
+        this_dict['total_cases'] = this_dict['p1_txt'][s_total:s_date-12].strip()
+    # this_dict['pdf'] = [{"url": url}]
+    matching_record = airtab.match('modification_datetime', this_dict['modification_datetime'])
     if matching_record:
-        return
-    else:
-        return new_record['id']
+        print("mdoc covid pdf hasn't been updated")
+        return False
+    new_record = airtab.insert(this_dict, typecast=True)
+    return new_record['id']
 
 
 def get_images():
@@ -70,4 +74,4 @@ if __name__ == '__main__':
         media_ids = get_images()
         tweet_with_images(rid=new_rid, mids=media_ids)
     else:
-        print('covid document hasn\'t changed')
+        print('no updates to mdoc covid pdf')
