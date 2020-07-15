@@ -32,6 +32,7 @@ def web_to_dc(this_dict):
     obj.title = this_dict['raw_title']
     obj.source = 'MDOC'
     obj.put()
+    time.sleep(5)
     this_dict['dc_id'] = str(obj.id)
     this_dict['dc_title'] = obj.title
     this_dict['dc_access'] = obj.access
