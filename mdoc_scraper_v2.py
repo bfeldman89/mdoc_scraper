@@ -40,6 +40,7 @@ def tweet_it(obj, tweet_txt):
             media_ids.append(response['media_id'])
         tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
     except requests.exceptions.HTTPError:
+        print('error uploading page image to twitter! wtf!')
         tweet = tw.update_status(status=tweet_txt)
     return tweet['id_str']
 
