@@ -24,19 +24,23 @@ def upload_to_documentcloud(pdf, this_dict, data):
     this_dict['dc_title'] = obj.title
     this_dict['dc_access'] = obj.access
     this_dict['dc_pages'] = obj.pages
+    this_dict['dc_url'] = obj.canonical_url
     return obj
 
 
 def tweet_it(obj, tweet_txt):
     media_ids = []
     image_list = obj.normal_image_url_list[:4]
-    for image in image_list:
-        r = requests.get(image)
-        r.raise_for_status()
-        uploadable = BytesIO(r.content)
-        response = tw.upload_media(media=uploadable)
-        media_ids.append(response['media_id'])
-    tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
+    try:
+        for image in image_list:
+            r = requests.get(image)
+            r.raise_for_status()
+            uploadable = BytesIO(r.content)
+            response = tw.upload_media(media=uploadable)
+            media_ids.append(response['media_id'])
+        tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
+    except requests.exceptions.HTTPError:
+        tweet = tw.update_status(status=tweet_txt)
     return tweet['id_str']
 
 
