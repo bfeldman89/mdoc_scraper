@@ -40,12 +40,13 @@ def web_to_dc(this_dict):
     this_dict['dc_p1_txt'] = unicodedata.normalize("NFKD", obj.get_page_text(1))
     this_dict['dc_full_text'] = unicodedata.normalize("NFKD", obj.full_text)
     this_dict['dc_pdf'] = obj.pdf_url
+    this_dict['dc_url'] = obj.canonical_url
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_full_text'].splitlines()
     if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
-        last_updated = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip()
-        total_cases = full_txt_lines[-2].replace('TOTAL', '').strip()
-        this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {last_updated}. The total number of *confirmed* cases is {total_cases}. ({this_dict['url']})"
+        this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip()
+        this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
+        this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {this_dict['last_updated']}. The total number of *confirmed* cases is {this_dict['total_cases']}.\n{this_dict['dc_url']}"
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         airtab.insert(this_dict, typecast=True)
 
@@ -59,6 +60,7 @@ def main():
         relative_url = link.get('href')
         try:
             if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
+                print(relative_url)
                 this_dict['url'] = urljoin(url, relative_url)
                 this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace('\xa0', '').replace('CasesState', 'Cases: State')
                 m = airtab.match('url', this_dict['url'])
