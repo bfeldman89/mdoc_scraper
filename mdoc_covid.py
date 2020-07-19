@@ -62,7 +62,7 @@ def main():
             if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
                 print(relative_url)
                 this_dict['url'] = urljoin(url, relative_url)
-                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace('\xa0', '').replace('CasesState', 'Cases: State')
+                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace('\xa0', '').replace('\x00', '').replace('CasesState', 'Cases: State')
                 m = airtab.match('url', this_dict['url'])
                 if not m:
                     r = requests.get(this_dict['url'])
