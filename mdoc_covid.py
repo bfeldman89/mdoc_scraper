@@ -46,7 +46,11 @@ def web_to_dc(this_dict):
     if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
         this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip()
         this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
-        this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {this_dict['last_updated']}. The total number of *confirmed* cases is {this_dict['total_cases']}.\n{this_dict['dc_url']}"
+        this_dict['tweet_msg'] = (
+            f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19, but for reasons unknown, "
+            f"in early July, MDOC abruptly stopped sharing how many employees have tested positive & how many inmates & employees have been tested. {this_dict['dc_url']}"
+        )
+        # this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {this_dict['last_updated']}. The total number of *confirmed* cases is {this_dict['total_cases']}.\n{this_dict['dc_url']}"
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         airtab.insert(this_dict, typecast=True)
 
@@ -60,14 +64,17 @@ def main():
         relative_url = link.get('href')
         try:
             if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
-                print(relative_url)
                 this_dict['url'] = urljoin(url, relative_url)
-                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace('\xa0', '').replace('\x00', '').replace('CasesState', 'Cases: State')
+                print(this_dict['url'])
+                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace(
+                    '\xa0', '').replace('\x00', '').replace('CasesState', 'Cases: State')
                 m = airtab.match('url', this_dict['url'])
                 if not m:
                     r = requests.get(this_dict['url'])
                     if r.status_code == 200:
                         web_to_dc(this_dict)
+                else:
+                    print('oh lort. nothing new. nothing changed. same ole shit. same olllle fucking shit.')
         except AttributeError:
             pass
 
