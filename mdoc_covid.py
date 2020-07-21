@@ -44,7 +44,7 @@ def web_to_dc(this_dict):
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_full_text'].splitlines()
     if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
-        this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip()
+        this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip().replace('\x00', '')
         this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
         this_dict['tweet_msg'] = (
             f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19, but for reasons unknown, "
