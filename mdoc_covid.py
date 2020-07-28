@@ -1,5 +1,6 @@
 # !/usr/bin/env python
 """This module does blah blah."""
+import re
 import time
 import unicodedata
 from io import BytesIO
@@ -74,6 +75,11 @@ def scrape_q_and_a(this_dict):
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
         f"{this_dict['dc_url']}"
     )
+    testing_data = re.findall(r"\d+", this_dict['tweet_msg'])
+    this_dict['inmates_pos'] = testing_data[0]
+    this_dict['inmates_neg'] = testing_data[1]
+    this_dict['staff_pos'] = testing_data[2]
+    this_dict['staff_neg'] = testing_data[3]
     this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
     airtab.insert(this_dict, typecast=True)
 
