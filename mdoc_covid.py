@@ -18,7 +18,7 @@ def tweet_it(obj, tweet_txt):
         uploadable = BytesIO(r.content)
         response = tw.upload_media(media=uploadable)
         media_ids.append(response['media_id'])
-        tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
+    tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
     return tweet['id_str']
 
 
@@ -46,14 +46,17 @@ def web_to_dc(this_dict):
     if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
         this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip().replace('\x00', '')
         this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
-        this_dict['tweet_msg'] = (
-            f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19, but for reasons unknown, "
-            f"in early July, MDOC abruptly stopped sharing how many employees have tested positive & how many inmates & employees have been tested. {this_dict['dc_url']}"
-        )
-        # this_dict['tweet_msg'] = f"The online pdf of \"COVID-19 Confirmed Inmate Cases\" was updated on {this_dict['last_updated']}. The total number of *confirmed* cases is {this_dict['total_cases']}.\n{this_dict['dc_url']}"
+        this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19. {this_dict['dc_url']}"
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         airtab.insert(this_dict, typecast=True)
-
+    elif full_txt_lines[0].strip() == 'Answers to some of the most frequently asked questions:':
+        this_dict['last_updated'] = full_txt_lines[1].replace('Last Update:', '').replace(', ', ', 2020 at ').strip().replace('\x00', '')
+        this_dict['tweet_msg'] = (
+            f"On July 21, MDOC resumed sharing more complete data -- how many employees have tested positive & how many inmates & employees have been tested. "
+            f"See page 2 of this document, which was updated on {this_dict['last_updated']} {this_dict['dc_url']}"
+        )
+        this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
+        airtab.insert(this_dict, typecast=True)
 
 def main():
     url = 'https://www.mdoc.ms.gov/Pages/COVID-19-Information-and-Updates.aspx'
