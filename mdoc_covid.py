@@ -75,7 +75,7 @@ def scrape_q_and_a(this_dict):
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
         f"{this_dict['dc_url']}"
     )
-    testing_data = re.findall(r"\d+", this_dict['tweet_msg'])
+    testing_data = re.findall(r"\d+", this_dict['tweet_msg'])[-4:]
     this_dict['inmates_pos'] = testing_data[0]
     this_dict['inmates_neg'] = testing_data[1]
     this_dict['staff_pos'] = testing_data[2]
