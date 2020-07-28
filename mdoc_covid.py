@@ -11,7 +11,7 @@ from common import airtab_mdoc as airtab, dc, tw, muh_headers
 
 def tweet_it(obj, tweet_txt):
     media_ids = []
-    image_list = obj.normal_image_url_list[:4]
+    image_list = obj.normal_image_url_list[:2]
     for image in image_list:
         r = requests.get(image)
         r.raise_for_status()
@@ -42,7 +42,7 @@ def web_to_dc(this_dict):
     this_dict['dc_pdf'] = obj.pdf_url
     this_dict['dc_url'] = obj.canonical_url
     this_dict['dc_txt_url'] = obj.full_text_url
-    full_txt_lines = this_dict['dc_full_text'].splitlines()
+    full_txt_lines = this_dict['dc_p1_txt'].splitlines()
     if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
         this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip().replace('\x00', '')
         this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
@@ -51,12 +51,32 @@ def web_to_dc(this_dict):
         airtab.insert(this_dict, typecast=True)
     elif full_txt_lines[0].strip() == 'Answers to some of the most frequently asked questions:':
         this_dict['last_updated'] = full_txt_lines[1].replace('Last Update:', '').replace(', ', ', 2020 at ').strip().replace('\x00', '')
-        this_dict['tweet_msg'] = (
-            f"On July 21, MDOC resumed sharing more complete data -- how many employees have tested positive & how many inmates & employees have been tested. "
-            f"See page 2 of this document, which was updated on {this_dict['last_updated']} {this_dict['dc_url']}"
-        )
-        this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
-        airtab.insert(this_dict, typecast=True)
+        scrape_q_and_a(this_dict)
+    else:
+        print('WTF! The first line of the pdf was: ', full_txt_lines[0].strip())
+
+
+def scrape_q_and_a(this_dict):
+    obj = dc.documents.get(int(this_dict['dc_id']))
+    p2_txt = obj.get_page_text(2)
+    txt_lines = p2_txt.splitlines()
+    list_of_first_lines_of_answers = []
+    for x in txt_lines:
+        if x.startswith('A. '):
+            first_line = x.replace('A. ', '')
+            first_line_trimmed = first_line[:first_line.find('.')+1]
+            list_of_first_lines_of_answers.append(first_line_trimmed)
+    this_dict['tweet_msg'] = (
+        f"As of {this_dict['last_updated']}, \""
+        f"{list_of_first_lines_of_answers[0].replace(', based on the most recent data', '')}.. "
+        f"{list_of_first_lines_of_answers[2].replace(', based on the latest report', '')}.. "
+        f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
+        f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
+        f"{this_dict['dc_url']}"
+    )
+    this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
+    airtab.insert(this_dict, typecast=True)
+
 
 def main():
     url = 'https://www.mdoc.ms.gov/Pages/COVID-19-Information-and-Updates.aspx'
