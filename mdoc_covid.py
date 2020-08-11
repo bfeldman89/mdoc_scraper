@@ -7,7 +7,7 @@ from io import BytesIO
 from urllib.parse import urljoin
 import requests
 from bs4 import BeautifulSoup
-from common import airtab_mdoc as airtab, dc, tw, muh_headers
+from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers
 
 
 def tweet_it(obj, tweet_txt):
@@ -49,7 +49,9 @@ def web_to_dc(this_dict):
         this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
         this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19. {this_dict['dc_url']}"
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
-        airtab.insert(this_dict, typecast=True)
+        new_rec = airtab_mdoc.insert(this_dict, typecast=True)
+        time.sleep(5)
+        scrape_covid_cases_per_facility(record_id=new_rec['id'])
     elif full_txt_lines[0].strip() == 'Answers to some of the most frequently asked questions:':
         this_dict['last_updated'] = full_txt_lines[1].replace('Last Update:', '').replace(', ', ', 2020 at ').strip().replace('\x00', '')
         scrape_q_and_a(this_dict)
@@ -67,21 +69,36 @@ def scrape_q_and_a(this_dict):
             first_line = x.replace('A. ', '')
             first_line_trimmed = first_line[:first_line.find('.')+1]
             list_of_first_lines_of_answers.append(first_line_trimmed)
-    this_dict['tweet_msg'] = (
-        f"As of {this_dict['last_updated']}, \""
-        f"{list_of_first_lines_of_answers[0].replace(', based on the most recent data', '')}.. "
+    excerpt = (
+        f"\"{list_of_first_lines_of_answers[0].replace(', based on the most recent data', '')}.. "
         f"{list_of_first_lines_of_answers[2].replace(', based on the latest report', '')}.. "
         f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
-        f"{this_dict['dc_url']}"
     )
-    testing_data = re.findall(r"\d+", this_dict['tweet_msg'])[-4:]
+    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}"
+    testing_data = re.findall(r"\d+", excerpt)
     this_dict['inmates_pos'] = testing_data[0]
     this_dict['inmates_neg'] = testing_data[1]
     this_dict['staff_pos'] = testing_data[2]
     this_dict['staff_neg'] = testing_data[3]
     this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
-    airtab.insert(this_dict, typecast=True)
+    airtab_mdoc.insert(this_dict, typecast=True)
+
+
+def scrape_covid_cases_per_facility(record_id):
+    rec = airtab_mdoc.get(record_id)
+    this_dict = {}
+    this_dict['iso'] = rec['fields']['iso']
+    txt = rec['fields']['dc_p1_txt']
+    lines = txt.splitlines()
+    for line in lines:
+        m = re.search(r'\d+$', line)
+        if m:
+            cases = m.group()
+            facility = line.replace(cases, '').strip()
+            this_dict[facility] = cases
+    airtab_mdoc2.insert(this_dict, typecast=True)
+
 
 
 def main():
@@ -94,16 +111,18 @@ def main():
         try:
             if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
                 this_dict['url'] = urljoin(url, relative_url)
-                print(this_dict['url'])
+                # print(this_dict['url'])
                 this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace(
                     '\xa0', '').replace('\x00', '').replace('CasesState', 'Cases: State')
-                m = airtab.match('url', this_dict['url'])
+                m = airtab_mdoc.match('url', this_dict['url'])
                 if not m:
                     r = requests.get(this_dict['url'])
                     if r.status_code == 200:
                         web_to_dc(this_dict)
+                    elif r.status_code == 401:
+                        print('401 UNAUTHORIZED')
                 else:
-                    print('oh lort. nothing new. nothing changed. same ole shit. same olllle fucking shit.')
+                    print('nothing new. nothing changed. same ole shit. same ole fucking shit -->  ', relative_url)
         except AttributeError:
             pass
 
