@@ -23,6 +23,9 @@ airtab_tweets = Airtable(base_key=os.environ['botfeldman89_db'],
                          table_name='scheduled_tweets',
                          api_key=os.environ['AIRTABLE_API_KEY'])
 
+airtab_mdoc2 = Airtable(base_key=os.environ['other_scrapers_db'],
+                        table_name='covid cases per facility',
+                        api_key=os.environ['AIRTABLE_API_KEY'])
 
 dc = DocumentCloud(username=os.environ['MUCKROCK_USERNAME'],
                    password=os.environ['MUCKROCK_PW'])
