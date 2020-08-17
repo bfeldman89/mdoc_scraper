@@ -44,9 +44,10 @@ def web_to_dc(this_dict):
     this_dict['dc_url'] = obj.canonical_url
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_p1_txt'].splitlines()
-    if full_txt_lines[0] == 'COVID‐19 Confirmed Inmate Cases':
+    if full_txt_lines[0] in {'COVID‐19 Confirmed Inmate Cases', 'COVID‐19 Confirmed Cases'}:
         this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip().replace('\x00', '')
-        this_dict['total_cases'] = full_txt_lines[-2].replace('TOTAL', '').strip()
+        totals = re.findall(r'\d+', full_txt_lines[-2])
+        this_dict['total_cases'] = totals[0]
         this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19. {this_dict['dc_url']}"
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         new_rec = airtab_mdoc.insert(this_dict, typecast=True)
@@ -66,21 +67,21 @@ def scrape_q_and_a(this_dict):
     list_of_first_lines_of_answers = []
     for x in txt_lines:
         if x.startswith('A. '):
-            first_line = x.replace('A. ', '')
-            first_line_trimmed = first_line[:first_line.find('.')+1]
-            list_of_first_lines_of_answers.append(first_line_trimmed)
+            first_line = x.replace('A. ', '').strip()
+            list_of_first_lines_of_answers.append(first_line)
     excerpt = (
-        f"\"{list_of_first_lines_of_answers[0].replace(', based on the most recent data', '')}.. "
+        f"\"{list_of_first_lines_of_answers[0].replace(' in the inmate', '')}.. "
         f"{list_of_first_lines_of_answers[2].replace(', based on the latest report', '')}.. "
         f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
     )
-    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}"
+    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}".replace('and', '&').replace('The department', 'MDOC')
     testing_data = re.findall(r"\d+", excerpt)
     this_dict['inmates_pos'] = testing_data[0]
-    this_dict['inmates_neg'] = testing_data[1]
-    this_dict['staff_pos'] = testing_data[2]
-    this_dict['staff_neg'] = testing_data[3]
+    this_dict['inmates_pos_active'] = testing_data[1]
+    this_dict['inmates_neg'] = testing_data[2]
+    this_dict['staff_pos'] = testing_data[3]
+    this_dict['staff_neg'] = testing_data[4]
     this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
     airtab_mdoc.insert(this_dict, typecast=True)
 
@@ -92,13 +93,15 @@ def scrape_covid_cases_per_facility(record_id):
     txt = rec['fields']['dc_p1_txt']
     lines = txt.splitlines()
     for line in lines:
-        m = re.search(r'\d+$', line)
+        m = re.findall(r'\d+', line)
         if m:
-            cases = m.group()
-            facility = line.replace(cases, '').strip()
-            this_dict[facility] = cases
+            if len(m) == 2:
+                cases = m[0]
+                active_cases = m[1]
+                facility = line.replace(cases, '').replace(active_cases, '').strip()
+                this_dict[facility] = cases
+                this_dict[f"{facility} (active)"] = active_cases
     airtab_mdoc2.insert(this_dict, typecast=True)
-
 
 
 def main():
@@ -122,7 +125,7 @@ def main():
                     elif r.status_code == 401:
                         print('401 UNAUTHORIZED')
                 else:
-                    print('nothing new. nothing changed. same ole shit. same ole fucking shit -->  ', relative_url)
+                    print('nothing new. nothing changed. --> ', this_dict['url'])
         except AttributeError:
             pass
 
