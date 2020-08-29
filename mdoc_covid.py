@@ -3,10 +3,15 @@
 import re
 import time
 import unicodedata
+
 from io import BytesIO
 from urllib.parse import urljoin
+
 import requests
+
 from bs4 import BeautifulSoup
+from PyPDF2 import PdfFileReader
+
 from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers
 
 
@@ -130,5 +135,28 @@ def main():
             pass
 
 
+def main_v2():
+    urls = ['https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
+            'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf']
+    for url in urls:
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f'The url is broken. status code: {response.status_code}')
+            return False
+        this_dict = {'url': url}
+        with BytesIO(response.content) as f:
+            this_pdf = PdfFileReader(f)
+            information = dict(this_pdf.getDocumentInfo())
+        this_dict['pdf_author'] = information.get('/Author')
+        this_dict['pdf_creator'] = information.get('/Creator')
+        this_dict['pdf_mod_datetime'] = information.get('/ModDate').replace("'", '')
+        this_dict['pdf_creation_datetime'] = information.get('/CreationDate').replace("'", '')
+        this_dict['pdf_producer'] = information.get('/Producer')
+        matching_record = airtab_mdoc.match('pdf_mod_datetime', this_dict['pdf_mod_datetime'])
+        if matching_record:
+            print('nothing new. nothing changed. --> ', this_dict['url'])
+            return False
+        web_to_dc(this_dict)
+
 if __name__ == "__main__":
-    main()
+    main_v2()
