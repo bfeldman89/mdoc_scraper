@@ -5,11 +5,9 @@ import time
 import unicodedata
 
 from io import BytesIO
-from urllib.parse import urljoin
 
 import requests
 
-from bs4 import BeautifulSoup
 from PyPDF2 import PdfFileReader
 
 from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers
@@ -110,41 +108,16 @@ def scrape_covid_cases_per_facility(record_id):
 
 
 def main():
-    url = 'https://www.mdoc.ms.gov/Pages/COVID-19-Information-and-Updates.aspx'
-    r = requests.get(url, headers=muh_headers)
-    soup = BeautifulSoup(r.text, 'html.parser')
-    for link in soup.find_all('a'):
-        this_dict = {'doc_type': 'covid_update'}
-        relative_url = link.get('href')
-        try:
-            if relative_url.endswith('.pdf') and relative_url.startswith('/Documents/'):
-                this_dict['url'] = urljoin(url, relative_url)
-                # print(this_dict['url'])
-                this_dict['raw_title'] = link.get_text(strip=True).replace('\u200b', '').replace(
-                    '\xa0', '').replace('\x00', '').replace('CasesState', 'Cases: State')
-                m = airtab_mdoc.match('url', this_dict['url'])
-                if not m:
-                    r = requests.get(this_dict['url'])
-                    if r.status_code == 200:
-                        web_to_dc(this_dict)
-                    elif r.status_code == 401:
-                        print('401 UNAUTHORIZED')
-                else:
-                    print('nothing new. nothing changed. --> ', this_dict['url'])
-        except AttributeError:
-            pass
-
-
-def main_v2():
     urls = ['https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
             'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf']
     for url in urls:
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f'The url is broken. status code: {response.status_code}')
+        r = requests.get(url, headers=muh_headers)
+        if r.status_code != 200:
+            print(f'The url is broken. status code: {r.status_code}')
             return False
-        this_dict = {'url': url}
-        with BytesIO(response.content) as f:
+        this_dict = {'doc_type': 'covid_update'}
+        this_dict['url'] = url
+        with BytesIO(r.content) as f:
             this_pdf = PdfFileReader(f)
             information = dict(this_pdf.getDocumentInfo())
         this_dict['pdf_author'] = information.get('/Author')
@@ -159,4 +132,4 @@ def main_v2():
         web_to_dc(this_dict)
 
 if __name__ == "__main__":
-    main_v2()
+    main()
