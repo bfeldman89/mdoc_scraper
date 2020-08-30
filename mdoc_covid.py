@@ -131,7 +131,10 @@ def scrape_covid_cases_per_facility(record_id):
 
 def main():
     urls = ['https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
-            'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf']
+    urls = [
+        'https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
+        'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf'
+    ]
     for url in urls:
         r = requests.get(url, headers=muh_headers)
         if r.status_code != 200:
@@ -150,8 +153,8 @@ def main():
         matching_record = airtab_mdoc.match('pdf_mod_datetime', this_dict['pdf_mod_datetime'])
         if matching_record:
             print('nothing new. nothing changed. --> ', this_dict['url'])
-            return False
-        web_to_dc(this_dict)
+        else:
+            web_to_dc(this_dict)
 
 
 if __name__ == "__main__":
