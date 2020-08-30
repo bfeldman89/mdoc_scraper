@@ -48,16 +48,37 @@ def web_to_dc(this_dict):
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_p1_txt'].splitlines()
     if full_txt_lines[0] in {'COVID‐19 Confirmed Inmate Cases', 'COVID‐19 Confirmed Cases'}:
-        this_dict['last_updated'] = full_txt_lines[-1].replace('Last Update:', '').replace('2020 ', '2020 at ').strip().replace('\x00', '')
+        this_dict['last_updated'] = full_txt_lines[-1].replace(
+            'Last Update:',
+            ''
+        ).replace(
+            '2020 ',
+            '2020 at '
+        ).strip().replace(
+            '\x00',
+            ''
+        )
         totals = re.findall(r'\d+', full_txt_lines[-2])
         this_dict['total_cases'] = totals[0]
-        this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates have tested positive for COVID-19. {this_dict['dc_url']}"
+        this_dict['tweet_msg'] = (
+            f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates "
+            f"have tested positive for COVID-19. {this_dict['dc_url']}"
+        )
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         new_rec = airtab_mdoc.insert(this_dict, typecast=True)
         time.sleep(5)
         scrape_covid_cases_per_facility(record_id=new_rec['id'])
     elif full_txt_lines[0].strip() == 'Answers to some of the most frequently asked questions:':
-        this_dict['last_updated'] = full_txt_lines[1].replace('Last Update:', '').replace(', ', ', 2020 at ').strip().replace('\x00', '')
+        this_dict['last_updated'] = full_txt_lines[1].replace(
+            'Last Update:',
+            ''
+        ).replace(
+            ', ',
+            ', 2020 at '
+        ).strip().replace(
+            '\x00',
+            ''
+        )
         scrape_q_and_a(this_dict)
     else:
         print('WTF! The first line of the pdf was: ', full_txt_lines[0].strip())
@@ -78,7 +99,8 @@ def scrape_q_and_a(this_dict):
         f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
     )
-    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}".replace('and', '&').replace('The department', 'MDOC')
+    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}".replace(
+        'and', '&').replace('The department', 'MDOC')
     testing_data = re.findall(r"\d+", excerpt)
     this_dict['inmates_pos'] = testing_data[0]
     this_dict['inmates_pos_active'] = testing_data[1]
@@ -130,6 +152,7 @@ def main():
             print('nothing new. nothing changed. --> ', this_dict['url'])
             return False
         web_to_dc(this_dict)
+
 
 if __name__ == "__main__":
     main()
