@@ -130,7 +130,6 @@ def scrape_covid_cases_per_facility(record_id):
 
 
 def main():
-    urls = ['https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
     urls = [
         'https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
         'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf'
