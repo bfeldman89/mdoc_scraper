@@ -36,13 +36,15 @@ tw = Twython(os.environ['TWITTER_APP_KEY'], os.environ['TWITTER_APP_SECRET'],
 
 
 muh_headers = {
-    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'}
+    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36'
+}
 
 
 my_funcs = {'scrape_daily_pop': 'receET4GbZsIHZ1ap',
             'scrape_monthly_fact_scheets': 'recl93NdV0nvxiP6B',
             'scrape_press_releases': 'rec6iaRXOshuZ3OwY',
-            'scrape_mdoc_stuff': 'recdI7ExzeoiTYI6A'}
+            'scrape_mdoc_stuff': 'recdI7ExzeoiTYI6A',
+            'mdoc_covid_main': 'recudgPMqkvu2fmve', }
 
 
 def wrap_from_module(module):
