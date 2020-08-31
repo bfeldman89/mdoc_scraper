@@ -10,7 +10,9 @@ import requests
 
 from PyPDF2 import PdfFileReader
 
-from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers
+from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers, wrap_from_module
+
+wrap_it_up = wrap_from_module('mdoc_scraper/mdoc_covid.py')
 
 
 def tweet_it(obj, tweet_txt):
@@ -130,6 +132,7 @@ def scrape_covid_cases_per_facility(record_id):
 
 
 def main():
+    t0, i = time.time(), 0
     urls = [
         'https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
         'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf'
@@ -153,7 +156,10 @@ def main():
         if matching_record:
             print('nothing new. nothing changed. --> ', this_dict['url'])
         else:
+            i += 1
             web_to_dc(this_dict)
+    wrap_it_up(t0, new=i, total=2, function='mdoc_covid_main')
+
 
 
 if __name__ == "__main__":
