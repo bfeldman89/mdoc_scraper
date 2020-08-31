@@ -7,7 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 from common import airtab_mdoc as airtab, dc, tw, muh_headers, wrap_from_module
 
-wrap_it_up = wrap_from_module('mdoc_scraper.py')
+wrap_it_up = wrap_from_module('mdoc_scraper/mdoc_scraper.py')
 
 
 def upload_to_documentcloud(pdf, this_dict, data):
