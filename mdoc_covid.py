@@ -75,12 +75,13 @@ def web_to_dc(this_dict):
             'Last Update:',
             ''
         ).replace(
-            ', ',
+            ', 2020, ',
             ', 2020 at '
         ).strip().replace(
             '\x00',
             ''
         )
+        this_dict['last_updated_abrev'] = this_dict['last_updated'][:this_dict['last_updated'].find(', ')].replace('September', 'Sep.')
         scrape_q_and_a(this_dict)
     else:
         print('WTF! The first line of the pdf was: ', full_txt_lines[0].strip())
@@ -101,14 +102,14 @@ def scrape_q_and_a(this_dict):
         f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
     )
-    this_dict['tweet_msg'] = f"As of {this_dict['last_updated']}, {excerpt} {this_dict['dc_url']}".replace(
+    this_dict['tweet_msg'] = f"As of {this_dict['last_updated_abrev']}, {excerpt} {this_dict['dc_url']}".replace(
         'and', '&').replace('The department', 'MDOC')
     testing_data = re.findall(r"\d+", excerpt)
     this_dict['inmates_pos'] = testing_data[0]
     this_dict['inmates_pos_active'] = testing_data[1]
-    this_dict['inmates_neg'] = testing_data[2]
-    this_dict['staff_pos'] = testing_data[3]
-    this_dict['staff_neg'] = testing_data[4]
+    this_dict['inmates_neg'] = f"{testing_data[2]},{testing_data[3]}"
+    this_dict['staff_pos'] = testing_data[4]
+    this_dict['staff_neg'] = testing_data[5]
     this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
     airtab_mdoc.insert(this_dict, typecast=True)
 
@@ -133,16 +134,15 @@ def scrape_covid_cases_per_facility(record_id):
 
 def main():
     t0, i = time.time(), 0
-    urls = [
-        'https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf',
-        'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf'
-    ]
-    for url in urls:
+    urls = {'Confirmed Cases: State, Private and Regional Facilities': 'https://www.mdoc.ms.gov/Documents/covid-19/Inmates%20cases%20chart.pdf',
+            'MDOC Questions and Answers for COVID-19': 'https://www.mdoc.ms.gov/Documents/covid-19/QA-Questions%20and%20Answers.pdf'}
+    for raw_title, url in urls.items():
+        this_dict = {'doc_type': 'covid_update'}
         r = requests.get(url, headers=muh_headers)
         if r.status_code != 200:
             print(f'The url is broken. status code: {r.status_code}')
             return False
-        this_dict = {'doc_type': 'covid_update'}
+        this_dict['raw_title'] = raw_title
         this_dict['url'] = url
         with BytesIO(r.content) as f:
             this_pdf = PdfFileReader(f)
@@ -159,7 +159,6 @@ def main():
             i += 1
             web_to_dc(this_dict)
     wrap_it_up(t0, new=i, total=2, function='mdoc_covid_main')
-
 
 
 if __name__ == "__main__":
