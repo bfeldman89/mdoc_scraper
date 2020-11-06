@@ -60,8 +60,8 @@ def web_to_dc(this_dict):
             '\x00',
             ''
         )
-        totals = re.findall(r'\d+', full_txt_lines[-2])
-        this_dict['total_cases'] = totals[0]
+        totals = re.findall(r'TOTALS\s\d+', this_dict['dc_p1_txt'])
+        this_dict['total_cases'] = totals[0].replace('TOTALS', '').strip()
         this_dict['tweet_msg'] = (
             f"As of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates "
             f"have tested positive for COVID-19. {this_dict['dc_url']}"
@@ -81,7 +81,7 @@ def web_to_dc(this_dict):
             '\x00',
             ''
         )
-        this_dict['last_updated_abrev'] = this_dict['last_updated'][:this_dict['last_updated'].find(', ')].replace('September', 'Sep.')
+        this_dict['last_updated_abrev'] = this_dict['last_updated'][:this_dict['last_updated'].find(', ')].replace('November', 'Nov.')
         scrape_q_and_a(this_dict)
     else:
         print('WTF! The first line of the pdf was: ', full_txt_lines[0].strip())
@@ -101,7 +101,7 @@ def scrape_q_and_a(this_dict):
         f"{list_of_first_lines_of_answers[2].replace(', based on the latest report', '')}.. "
         f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
         f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
-    )
+    ).replace(' one ', ' 1 ').replace(' two ', ' 2 ').replace(' three ', ' 3 ').replace(' four ', ' 4 ').replace(' five ', ' 5 ').replace(' six ', ' 6 ').replace(' seven ', ' 7 ').replace(' eight ', ' 8 ').replace(' nine ', ' 9 ')
     this_dict['tweet_msg'] = f"As of {this_dict['last_updated_abrev']}, {excerpt} {this_dict['dc_url']}".replace(
         'and', '&').replace('The department', 'MDOC')
     testing_data = re.findall(r"\d+", excerpt)
@@ -126,7 +126,7 @@ def scrape_covid_cases_per_facility(record_id):
             if len(m) == 2:
                 cases = m[0]
                 active_cases = m[1]
-                facility = line.replace(cases, '').replace(active_cases, '').strip()
+                facility = line.replace(cases, '').replace(active_cases, '').replace('*', '').strip()
                 this_dict[facility] = cases
                 this_dict[f"{facility} (active)"] = active_cases
     airtab_mdoc2.insert(this_dict, typecast=True)
