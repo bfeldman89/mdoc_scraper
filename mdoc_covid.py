@@ -50,7 +50,7 @@ def web_to_dc(this_dict):
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_p1_txt'].splitlines()
     if full_txt_lines[0] in {'COVID‐19 Confirmed Inmate Cases', 'COVID‐19 Confirmed Cases'}:
-        date_hit = re.search(r'Last Update:\s.+\n', this_dict['dc_p1_txt'])
+        date_hit = re.search(r'Last Update.*', this_dict['dc_p1_txt'])
         this_dict['last_updated'] = date_hit[0].replace(
             'Last Update:',
             ''
@@ -60,14 +60,14 @@ def web_to_dc(this_dict):
         ).strip().replace(
             '\x00',
             ''
-        )
+        ).replace('December', 'Dec.')
         numbers_hit = re.search(r'TOTALS\s\d+\*+\s\d+', this_dict['dc_p1_txt'])
         m = re.match(r"TOTALS\s(\d+)\*+\s(\d+)", numbers_hit[0])
         this_dict['total_cases'] = m.group(1)
         this_dict['total_active_cases'] = m.group(2)
         this_dict['tweet_msg'] = (
             f"According to MDOC, as of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates "
-            f"have tested positive for COVID-19, and {this_dict['total_cases']} cases are active. {this_dict['dc_url']}"
+            f"have tested positive for COVID-19, and {this_dict['total_active_cases']} cases are active. {this_dict['dc_url']}"
         )
         this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
         new_rec = airtab_mdoc.insert(this_dict, typecast=True)
@@ -84,7 +84,7 @@ def web_to_dc(this_dict):
             '\x00',
             ''
         )
-        this_dict['last_updated_abrev'] = this_dict['last_updated'][:this_dict['last_updated'].find(', ')].replace('November', 'Nov.')
+        this_dict['last_updated_abrev'] = this_dict['last_updated'][:this_dict['last_updated'].find(', ')].replace('December', 'Dec.')
         scrape_q_and_a(this_dict)
     else:
         print('WTF! The first line of the pdf was: ', full_txt_lines[0].strip())
