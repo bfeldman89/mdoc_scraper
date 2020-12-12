@@ -61,9 +61,9 @@ def web_to_dc(this_dict):
             '\x00',
             ''
         ).replace('December', 'Dec.')
-        numbers_hit = re.search(r'TOTALS\s\d+\*+\s\d+', this_dict['dc_p1_txt'])
-        m = re.match(r"TOTALS\s(\d+)\*+\s(\d+)", numbers_hit[0])
-        this_dict['total_cases'] = m.group(1)
+        numbers_hit = re.search(r'TOTALS\s\d,\d+\*+\s\d+', this_dict['dc_p1_txt'])
+        m = re.match(r"TOTALS\s(\d,\d+)\*+\s(\d+)", numbers_hit[0])
+        this_dict['total_cases'] = m.group(1).replace(',', '')
         this_dict['total_active_cases'] = m.group(2)
         this_dict['tweet_msg'] = (
             f"According to MDOC, as of {this_dict['last_updated']}, a total of {this_dict['total_cases']} MS inmates "
@@ -121,7 +121,7 @@ def scrape_covid_cases_per_facility(record_id):
     rec = airtab_mdoc.get(record_id)
     this_dict = {}
     this_dict['iso'] = rec['fields']['iso']
-    txt = rec['fields']['dc_p1_txt']
+    txt = re.sub(r"(?<=\d),(?=\d)", "", rec['fields']['dc_p1_txt'])
     m1 = re.search('Last Update:', txt)
     lines = txt[:m1.start()].splitlines()
     for line in lines:
