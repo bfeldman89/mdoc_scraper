@@ -92,27 +92,14 @@ def web_to_dc(this_dict):
 
 def scrape_q_and_a(this_dict):
     obj = dc.documents.get(int(this_dict['dc_id']))
-    p2_txt = obj.get_page_text(2)
-    txt_lines = p2_txt.splitlines()
-    list_of_first_lines_of_answers = []
-    for x in txt_lines:
-        if x.startswith('A. '):
-            first_line = x.replace('A. ', '').strip()
-            list_of_first_lines_of_answers.append(first_line)
-    excerpt = (
-        f"\"{list_of_first_lines_of_answers[0].replace(' in the inmate', '')}.. "
-        f"{list_of_first_lines_of_answers[2].replace(', based on the latest report', '')}.. "
-        f"{list_of_first_lines_of_answers[3].replace(', based on the most available information', '')}.. "
-        f"{list_of_first_lines_of_answers[4].replace('In addition to the positive cases, ', '')}\" "
-    ).replace(' one ', ' 1 ').replace(' two ', ' 2 ').replace(' three ', ' 3 ').replace(' four ', ' 4 ').replace(' five ', ' 5 ').replace(' six ', ' 6 ').replace(' seven ', ' 7 ').replace(' eight ', ' 8 ').replace(' nine ', ' 9 ')
-    this_dict['tweet_msg'] = f"As of {this_dict['last_updated_abrev']}, {excerpt} {this_dict['dc_url']}".replace(
-        'and', '&').replace('The department', 'MDOC')
-    testing_data = re.findall(r"\d+", excerpt)
-    this_dict['inmates_pos'] = testing_data[0]
-    this_dict['inmates_pos_active'] = testing_data[1]
-    this_dict['inmates_neg'] = f"{testing_data[2]},{testing_data[3]}"
-    this_dict['staff_pos'] = testing_data[4]
-    this_dict['staff_neg'] = testing_data[5]
+    txt = re.sub(r"(?<=\d),(?=\d)", "", this_dict['dc_full_text']).replace(' one ', ' 1 ').replace(' two ', ' 2 ').replace(' three ', ' 3 ').replace(' four ', ' 4 ').replace(' five ', ' 5 ').replace(' six ', ' 6 ').replace(' seven ', ' 7 ').replace(' eight ', ' 8 ').replace(' nine ', ' 9 ')
+    this_dict['inmates_pos'] = re.search(r'(\d+) confirmed positive cases', txt)[1]
+    this_dict['inmates_pos_active'] = re.search(r'and of that number, (\d+) cases', txt)[1]
+    this_dict['inmates_neg'] = re.search(r'(\d+) inmates to test negative', txt)[1]
+    this_dict['staff_pos'] = re.search(r'(\d+) positive cases among staff', txt)[1]
+    this_dict['staff_neg'] = re.search(r'(\d+) negative tests have been reported', txt)[1]
+    excerpt = f"There's been {this_dict['inmates_pos']} confirmed positive cases among inmates ({this_dict['inmates_pos_active']} active). {this_dict['inmates_neg']} inmates have tested negative. MDOC reports {this_dict['staff_pos']} employees have tested positive & {this_dict['staff_neg']} negative."
+    this_dict['tweet_msg'] = f"As of {this_dict['last_updated_abrev']}, {excerpt} {this_dict['dc_url']}"
     this_dict['tweet_id'] = tweet_it(obj, this_dict['tweet_msg'])
     airtab_mdoc.insert(this_dict, typecast=True)
 
