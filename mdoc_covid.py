@@ -49,7 +49,7 @@ def web_to_dc(this_dict):
     this_dict['dc_url'] = obj.canonical_url
     this_dict['dc_txt_url'] = obj.full_text_url
     full_txt_lines = this_dict['dc_p1_txt'].splitlines()
-    if full_txt_lines[0] in {'COVID‐19 Confirmed Inmate Cases', 'COVID‐19 Confirmed Cases'}:
+    if full_txt_lines[0] in {'COVID‐19 Confirmed Inmate Cases', 'COVID‐19 Confirmed Cases', 'COVID-19 Confirmed Inmate Cases'}:
         date_hit = re.search(r'Last Update.*', this_dict['dc_p1_txt'])
         this_dict['last_updated'] = date_hit[0].replace(
             'Last Update:',
@@ -94,7 +94,7 @@ def scrape_q_and_a(this_dict):
     obj = dc.documents.get(int(this_dict['dc_id']))
     txt = re.sub(r"(?<=\d),(?=\d)", "", this_dict['dc_full_text']).replace(' one ', ' 1 ').replace(' two ', ' 2 ').replace(' three ', ' 3 ').replace(' four ', ' 4 ').replace(' five ', ' 5 ').replace(' six ', ' 6 ').replace(' seven ', ' 7 ').replace(' eight ', ' 8 ').replace(' nine ', ' 9 ')
     this_dict['inmates_pos'] = re.search(r'(\d+) confirmed positive cases', txt)[1]
-    this_dict['inmates_pos_active'] = re.search(r'and of that number, (\d+) cases', txt)[1]
+    this_dict['inmates_pos_active'] = re.search(r'and of that number,.*(\d+)', txt)[1]
     this_dict['inmates_neg'] = re.search(r'(\d+) inmates to test negative', txt)[1]
     this_dict['staff_pos'] = re.search(r'(\d+) positive cases among staff', txt)[1]
     this_dict['staff_neg'] = re.search(r'(\d+) negative tests have been reported', txt)[1]
@@ -117,7 +117,7 @@ def scrape_covid_cases_per_facility(record_id):
             if len(m) == 2:
                 cases = m[0]
                 active_cases = m[1]
-                facility = line.replace(cases, '').replace(active_cases, '').replace('*', '').strip()
+                facility = line.replace(cases, '').replace(active_cases, '').replace('*', '').replace('-', '‐').strip()
                 this_dict[facility] = cases
                 this_dict[f"{facility} (active)"] = active_cases
     airtab_mdoc2.insert(this_dict, typecast=True)
