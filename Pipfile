@@ -10,8 +10,11 @@ pylint = "*"
 requests = "*"
 beautifulsoup4 = "*"
 airtable-python-wrapper = "*"
-python-documentcloud = "*"
 twython = "*"
+documentcloud = "*"
+send2trash = "*"
+pdf2image = "*"
+pypdf2 = "*"
 
 [requires]
 python_version = "3.8"
