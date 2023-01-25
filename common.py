@@ -7,23 +7,23 @@ from documentcloud import DocumentCloud
 from twython import Twython
 
 
-airtab_log = Airtable(base_key=os.environ['log_db'],
+airtab_log = Airtable(os.environ['log_db'],
                       table_name='log',
                       api_key=os.environ['AIRTABLE_API_KEY'])
 
-airtab_mdoc = Airtable(base_key=os.environ['other_scrapers_db'],
+airtab_mdoc = Airtable(os.environ['other_scrapers_db'],
                        table_name='mdoc',
                        api_key=os.environ['AIRTABLE_API_KEY'])
 
-airtab_covid = Airtable(base_key=os.environ['xxxp_db'],
+airtab_covid = Airtable(os.environ['xxxp_db'],
                         table_name='mdoc_covid',
                         api_key=os.environ['AIRTABLE_API_KEY'])
 
-airtab_tweets = Airtable(base_key=os.environ['botfeldman89_db'],
+airtab_tweets = Airtable(os.environ['botfeldman89_db'],
                          table_name='scheduled_tweets',
                          api_key=os.environ['AIRTABLE_API_KEY'])
 
-airtab_mdoc2 = Airtable(base_key=os.environ['other_scrapers_db'],
+airtab_mdoc2 = Airtable(os.environ['other_scrapers_db'],
                         table_name='covid cases per facility',
                         api_key=os.environ['AIRTABLE_API_KEY'])
 

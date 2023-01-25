@@ -15,6 +15,7 @@ documentcloud = "*"
 send2trash = "*"
 pdf2image = "*"
 pypdf2 = "*"
+pillow = "*"
 
 [requires]
 python_version = "3.8"
