@@ -10,7 +10,7 @@ import requests
 
 from PyPDF2 import PdfFileReader
 
-from common import airtab_mdoc, airtab_mdoc2, dc, tw, muh_headers, wrap_from_module
+from common import airtab_mdoc, airtab_mdoc2, client_v1, client_v2, dc, muh_headers, wrap_from_module
 
 wrap_it_up = wrap_from_module('mdoc_scraper/mdoc_covid.py')
 
@@ -22,10 +22,11 @@ def tweet_it(obj, tweet_txt):
         r = requests.get(image)
         r.raise_for_status()
         uploadable = BytesIO(r.content)
-        response = tw.upload_media(media=uploadable)
-        media_ids.append(response['media_id'])
-    tweet = tw.update_status(status=tweet_txt, media_ids=media_ids)
-    return tweet['id_str']
+        # response = tw.upload_media(media=uploadable)
+        media = client_v1.media_upload(file=uploadable)
+        media_ids.append(media['media_id'])
+    tweet = client_v2.create_tweet(text=tweet_txt, media_ids=media_ids)
+    return tweet[0]['id']
 
 
 def web_to_dc(this_dict):
