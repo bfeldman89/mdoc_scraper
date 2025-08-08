@@ -2,30 +2,26 @@
 """This module provides a function for shipping logs to Airtable."""
 import os
 import time
-from airtable import Airtable
+from pyairtable import Api
 from documentcloud import DocumentCloud
 import tweepy
 
+api = Api(os.environ['AIRTABLE_PAT'])
 
-airtab_log = Airtable(os.environ['log_db'],
-                      table_name='log',
-                      api_key=os.environ['AIRTABLE_API_KEY'])
+airtab_log = api.table(os.environ['log_db'],
+                      'log')
 
-airtab_mdoc = Airtable(os.environ['other_scrapers_db'],
-                       table_name='mdoc',
-                       api_key=os.environ['AIRTABLE_API_KEY'])
+airtab_mdoc = api.table(os.environ['other_scrapers_db'],
+                       'mdoc')
 
-airtab_covid = Airtable(os.environ['xxxp_db'],
-                        table_name='mdoc_covid',
-                        api_key=os.environ['AIRTABLE_API_KEY'])
+airtab_covid = api.table(os.environ['xxxp_db'],
+                        'mdoc_covid')
 
-airtab_tweets = Airtable(os.environ['botfeldman89_db'],
-                         table_name='scheduled_tweets',
-                         api_key=os.environ['AIRTABLE_API_KEY'])
+airtab_tweets = api.table(os.environ['botfeldman89_db'],
+                         'scheduled_tweets')
 
-airtab_mdoc2 = Airtable(os.environ['other_scrapers_db'],
-                        table_name='covid cases per facility',
-                        api_key=os.environ['AIRTABLE_API_KEY'])
+airtab_mdoc2 = api.table(os.environ['other_scrapers_db'],
+                        'covid cases per facility')
 
 dc = DocumentCloud(username=os.environ['MUCKROCK_USERNAME'],
                    password=os.environ['MUCKROCK_PW'])
